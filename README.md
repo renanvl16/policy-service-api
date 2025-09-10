@@ -358,4 +358,4 @@ Este projeto está licenciado sob a Licença Proprietária da ACME Seguros.
 
 ---
 
-*Gerado pela equipe de desenvolvimento ACME © 2024*
+*Gerado pela equipe de desenvolvimento ACME © 2025*
