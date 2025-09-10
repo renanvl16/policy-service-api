@@ -7,14 +7,14 @@ Microsserviço para gerenciamento de solicitações de apólices de seguro da AC
 ```
                     EDA - Policy Service API Architecture
     
-    ┌─────────────────────┐       ┌─────────────────────────────────┐       ┌─────────────────────┐
-    │                     │       │                                 │       │                     │
-    │    Client Apps      │──────▶│     Policy Service API      │──────▶│    Frauds API       │
-    │ (Mobile/Web/        │       │       (Spring Boot 3)           │◀──────│      (Mock)         │
-    │   WhatsApp)         │       │  Controllers + Service Layer    │       │    (WireMock)       │
-    │                     │       │   Domain/Rules/Events           │       │                     │
-    └─────────────────────┘       │  Producers/Consumers            │       └─────────────────────┘
-                                  └─────────────┬───────────────────┘
+    ┌─────────────────────┐        ┌─────────────────────────────────┐        ┌─────────────────────┐
+    │                     │        │                                 │        │                     │
+    │    Client Apps      │──────▶│     Policy Service API           │──────▶│    Frauds API       │
+    │ (Mobile/Web/        │        │       (Spring Boot 3)           │◀──────│      (Mock)          │
+    │   WhatsApp)         │        │  Controllers + Service Layer    │        │    (WireMock)       │
+    │                     │        │   Domain/Rules/Events           │        │                     │
+    └─────────────────────┘        │  Producers/Consumers            │        └─────────────────────┘
+                                   └─────────────┬───────────────────┘
                                                 │        ▲
                             ┌───────────────────┼────────┼───────────────────┐
                             │                   │        │                   │
@@ -24,7 +24,7 @@ Microsserviço para gerenciamento de solicitações de apólices de seguro da AC
     │       Kafka         │       │     PostgreSQL      │         │   Observability     │
     │   (payments,        │       │       (JPA)         │         │ Actuator->Prometheus│
     │  underwriting,      │       │                     │         │    ->Grafana        │
-    │policy-requests.     │       │                     │         │                     │
+    │ policy-requests.    │       │                     │         │                     │
     │    events)          │       │                     │         │                     │
     └─────────────────────┘       └─────────────────────┘         └─────────────────────┘
 ```
