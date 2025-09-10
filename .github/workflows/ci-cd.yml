@@ -1,0 +1,245 @@
+# Pipeline CI/CD para Policy Request Service
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [ published ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: acme/policy-request-service
+
+jobs:
+  # Job de testes
+  test:
+    name: Testes e Qualidade
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_USER: test_user
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout código
+      uses: actions/checkout@v4
+
+    - name: Configurar JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Cache dependências Maven
+      uses: actions/cache@v3
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+
+    - name: Executar testes unitários
+      run: mvn clean test
+
+    - name: Executar testes de integração
+      run: mvn verify -P integration-test
+      env:
+        SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/test_db
+        SPRING_DATASOURCE_USERNAME: test_user
+        SPRING_DATASOURCE_PASSWORD: test_password
+
+    - name: Gerar relatório de cobertura
+      run: mvn jacoco:report
+
+    - name: Upload relatório cobertura para Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./target/site/jacoco/jacoco.xml
+        flags: unittests
+        name: codecov-umbrella
+
+    - name: Análise SonarQube
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      run: |
+        mvn sonar:sonar \
+          -Dsonar.projectKey=acme_policy-request-service \
+          -Dsonar.organization=acme \
+          -Dsonar.host.url=https://sonarcloud.io \
+          -Dsonar.token=$SONAR_TOKEN
+
+    - name: Verificar Quality Gate
+      uses: sonarqube-quality-gate-action@master
+      timeout-minutes: 5
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  # Job de segurança
+  security:
+    name: Análise de Segurança
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout código
+      uses: actions/checkout@v4
+
+    - name: Executar Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: Upload Trivy scan results para GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  # Job de build da imagem Docker
+  build:
+    name: Build e Push Docker Image
+    runs-on: ubuntu-latest
+    needs: [test, security]
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout código
+      uses: actions/checkout@v4
+
+    - name: Configurar JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Build aplicação
+      run: mvn clean package -DskipTests
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=sha,prefix=sha-,format=short
+
+    - name: Build e push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+
+  # Job de deploy para desenvolvimento
+  deploy-dev:
+    name: Deploy Desenvolvimento
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/develop'
+    environment:
+      name: development
+      url: https://dev-api.acme.com
+
+    steps:
+    - name: Deploy para desenvolvimento
+      run: |
+        echo "Deploying to development environment"
+        # Aqui seria o comando real de deploy (kubectl, helm, etc.)
+        # kubectl set image deployment/policy-request-service policy-request-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop
+
+  # Job de deploy para produção
+  deploy-prod:
+    name: Deploy Produção
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'release'
+    environment:
+      name: production
+      url: https://api.acme.com
+
+    steps:
+    - name: Deploy para produção
+      run: |
+        echo "Deploying to production environment"
+        # Aqui seria o comando real de deploy para produção
+        # kubectl set image deployment/policy-request-service policy-request-service=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event.release.tag_name }}
+
+    - name: Executar testes de smoke em produção
+      run: |
+        sleep 60  # Aguardar deploy
+        curl -f https://api.acme.com/actuator/health || exit 1
+        echo "Smoke tests passed"
+
+    - name: Notificar equipe
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        channel: '#deployments'
+        text: |
+          🚀 Policy Request Service ${{ github.event.release.tag_name }} foi deployado em produção!
+          
+          📋 Changelog: ${{ github.event.release.html_url }}
+          🔗 API: https://api.acme.com
+          📊 Monitoramento: https://grafana.acme.com
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      if: always()
+
+  # Job de rollback automático (se necessário)
+  rollback:
+    name: Rollback Automático
+    runs-on: ubuntu-latest
+    needs: deploy-prod
+    if: failure() && github.event_name == 'release'
+
+    steps:
+    - name: Rollback para versão anterior
+      run: |
+        echo "Executing automatic rollback"
+        # kubectl rollout undo deployment/policy-request-service
+
+    - name: Notificar rollback
+      uses: 8398a7/action-slack@v3
+      with:
+        status: 'warning'
+        channel: '#deployments'
+        text: |
+          ⚠️ ROLLBACK AUTOMÁTICO EXECUTADO
+          
+          O deploy da versão ${{ github.event.release.tag_name }} falhou e foi revertido automaticamente.
+          
+          🔍 Verifique os logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

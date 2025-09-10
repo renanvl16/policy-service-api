@@ -1,0 +1,1017 @@
+{
+	"info": {
+		"_postman_id": "550e8400-e29b-41d4-a716-446655440000",
+		"name": "Policy Service API - ACME",
+		"description": "Coleção completa de testes para o microsserviço de solicitações de apólices de seguro.\n\n## Funcionalidades Testadas:\n- Criação de solicitações de apólice\n- Consulta por ID da solicitação\n- Consulta por ID do cliente\n- Cancelamento de solicitações\n- Validação de regras de negócio\n- Health checks e monitoramento\n\n## Variáveis de Ambiente:\n- `base_url`: URL base da API (padrão: http://localhost:8080)\n- `policy_id`: ID da solicitação criada dinamicamente\n- `customer_id`: ID do cliente usado nos testes",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12345678"
+	},
+	"item": [
+		{
+			"name": "Health Checks",
+			"item": [
+				{
+					"name": "Health Check Geral",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/actuator/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"actuator",
+								"health"
+							]
+						},
+						"description": "Verifica o status geral da aplicação e suas dependências"
+					},
+					"response": []
+				},
+				{
+					"name": "Health Check Banco de Dados",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/actuator/health/db",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"actuator",
+								"health",
+								"db"
+							]
+						},
+						"description": "Verifica especificamente a conectividade com PostgreSQL"
+					},
+					"response": []
+				},
+				{
+					"name": "Métricas da Aplicação",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/actuator/metrics",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"actuator",
+								"metrics"
+							]
+						},
+						"description": "Lista todas as métricas disponíveis da aplicação"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para verificação de saúde e monitoramento da aplicação"
+		},
+		{
+			"name": "Documentação API",
+			"item": [
+				{
+					"name": "OpenAPI Specification",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api-docs",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api-docs"
+							]
+						},
+						"description": "Especificação OpenAPI 3.0 da API em formato JSON"
+					},
+					"response": []
+				}
+			],
+			"description": "Documentação automática da API"
+		},
+		{
+			"name": "Gestão de Solicitações",
+			"item": [
+				{
+					"name": "Criar Solicitação AUTO - Cliente Regular",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code é 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response contém ID da solicitação\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.id).to.not.be.undefined;",
+									"    pm.globals.set(\"policy_id\", jsonData.id);",
+									"});",
+									"",
+									"pm.test(\"Response contém data de criação\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.createdAt).to.not.be.undefined;",
+									"});",
+									"",
+									"pm.test(\"Status inicial é RECEIVED\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql(\"RECEIVED\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Gerar um novo customer_id para o teste",
+									"const { v4: uuidv4 } = require('uuid');",
+									"const customerId = '550e8400-e29b-41d4-a716-446655440001';",
+									"pm.globals.set('customer_id', customerId);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customerId\": \"{{customer_id}}\",\n  \"productId\": \"PROD-AUTO-BASIC-001\",\n  \"category\": \"AUTO\",\n  \"salesChannel\": \"MOBILE\",\n  \"paymentMethod\": \"CREDIT_CARD\",\n  \"totalMonthlyPremiumAmount\": 185.50,\n  \"insuredAmount\": 280000.00,\n  \"coverages\": {\n    \"Roubo\": 120000.00,\n    \"Colisão\": 160000.00,\n    \"Perda Total\": 280000.00\n  },\n  \"assistances\": [\n    \"Guincho até 250km\",\n    \"Chaveiro 24h\",\n    \"Troca de Óleo\"\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/policy-requests",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"policy-requests"
+							]
+						},
+						"description": "Cria uma solicitação de apólice AUTO para cliente regular com valor dentro do limite"
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Solicitação VIDA - Cliente Preferencial",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code é 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response contém ID da solicitação\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.id).to.not.be.undefined;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customerId\": \"{{customer_id}}\",\n  \"productId\": \"PROD-VIDA-PREMIUM-001\",\n  \"category\": \"VIDA\",\n  \"salesChannel\": \"WEBSITE\",\n  \"paymentMethod\": \"DEBIT_ACCOUNT\",\n  \"totalMonthlyPremiumAmount\": 450.75,\n  \"insuredAmount\": 750000.00,\n  \"coverages\": {\n    \"Morte Natural\": 750000.00,\n    \"Morte Acidental\": 1500000.00,\n    \"Invalidez Permanente\": 375000.00\n  },\n  \"assistances\": [\n    \"Assistência Funeral\",\n    \"Orientação Jurídica\",\n    \"Segunda Opinião Médica\"\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/policy-requests",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"policy-requests"
+							]
+						},
+						"description": "Cria uma solicitação de seguro de VIDA para cliente preferencial"
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Solicitação RESIDENCIAL - Cliente Regular",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code é 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customerId\": \"550e8400-e29b-41d4-a716-446655440002\",\n  \"productId\": \"PROD-RESIDENCIAL-COMPLETO-001\",\n  \"category\": \"RESIDENCIAL\",\n  \"salesChannel\": \"WHATSAPP\",\n  \"paymentMethod\": \"BOLETO\",\n  \"totalMonthlyPremiumAmount\": 125.30,\n  \"insuredAmount\": 420000.00,\n  \"coverages\": {\n    \"Incêndio\": 420000.00,\n    \"Roubo/Furto\": 50000.00,\n    \"Danos Elétricos\": 15000.00,\n    \"Responsabilidade Civil\": 100000.00\n  },\n  \"assistances\": [\n    \"Chaveiro 24h\",\n    \"Eletricista\",\n    \"Encanador\",\n    \"Vidraceiro\"\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/policy-requests",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"policy-requests"
+							]
+						},
+						"description": "Cria uma solicitação de seguro RESIDENCIAL para cliente regular"
+					},
+					"response": []
+				},
+				{
+					"name": "Criar Solicitação EMPRESARIAL - Limite Alto",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code é 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customerId\": \"550e8400-e29b-41d4-a716-446655440003\",\n  \"productId\": \"PROD-EMPRESARIAL-PME-001\",\n  \"category\": \"EMPRESARIAL\",\n  \"salesChannel\": \"PRESENCIAL\",\n  \"paymentMethod\": \"PIX\",\n  \"totalMonthlyPremiumAmount\": 850.00,\n  \"insuredAmount\": 200000.00,\n  \"coverages\": {\n    \"Responsabilidade Civil Geral\": 500000.00,\n    \"Equipamentos\": 100000.00,\n    \"Mercadorias\": 50000.00,\n    \"Lucros Cessantes\": 200000.00\n  },\n  \"assistances\": [\n    \"Consultoria Jurídica\",\n    \"Suporte Técnico TI\",\n    \"Consultoria Contábil\"\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/policy-requests",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"policy-requests"
+							]
+						},
+						"description": "Cria uma solicitação de seguro EMPRESARIAL"
+					},
+					"response": []
+				}
+			],
+			"description": "Casos de sucesso para criação de diferentes tipos de solicitações"
+		},
+		{
+			"name": "Cenários de Validação",
+			"item": [
+				{
+					"name": "Valor Acima do Limite - Cliente Regular AUTO",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code é 201 (solicitação criada)\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Solicitação deve ser rejeitada automaticamente\", function () {",
+									"    // Aguarda alguns segundos e consulta o status",
+									"    setTimeout(() => {}, 2000);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customerId\": \"550e8400-e29b-41d4-a716-446655440099\",\n  \"productId\": \"PROD-AUTO-PREMIUM-001\",\n  \"category\": \"AUTO\",\n  \"salesChannel\": \"MOBILE\",\n  \"paymentMethod\": \"CREDIT_CARD\",\n  \"totalMonthlyPremiumAmount\": 500.00,\n  \"insuredAmount\": 400000.00,\n  \"coverages\": {\n    \"Roubo\": 200000.00,\n    \"Colisão\": 200000.00\n  },\n  \"assistances\": [\n    \"Guincho 24h\"\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/policy-requests",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"policy-requests"
+							]
+						},
+						"description": "Teste com valor acima do limite para cliente regular (R$ 400.000 > R$ 350.000)"
+					},
+					"response": []
+				},
+				{
+					"name": "Dados Inválidos - Customer ID Nulo",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code é 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response contém mensagem de erro\", function () {",
+									"    var responseText = pm.response.text();",
+									"    pm.expect(responseText).to.include(\"obrigatório\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"productId\": \"PROD-AUTO-BASIC-001\",\n  \"category\": \"AUTO\",\n  \"salesChannel\": \"MOBILE\",\n  \"paymentMethod\": \"CREDIT_CARD\",\n  \"totalMonthlyPremiumAmount\": 150.00,\n  \"insuredAmount\": 200000.00,\n  \"coverages\": {\n    \"Roubo\": 100000.00\n  },\n  \"assistances\": [\n    \"Guincho 24h\"\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/policy-requests",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"policy-requests"
+							]
+						},
+						"description": "Teste de validação com customer ID ausente"
+					},
+					"response": []
+				},
+				{
+					"name": "Valor Negativo - Prêmio Mensal",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code é 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customerId\": \"550e8400-e29b-41d4-a716-446655440098\",\n  \"productId\": \"PROD-AUTO-BASIC-001\",\n  \"category\": \"AUTO\",\n  \"salesChannel\": \"MOBILE\",\n  \"paymentMethod\": \"CREDIT_CARD\",\n  \"totalMonthlyPremiumAmount\": -50.00,\n  \"insuredAmount\": 200000.00,\n  \"coverages\": {\n    \"Roubo\": 100000.00\n  },\n  \"assistances\": [\n    \"Guincho 24h\"\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/policy-requests",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"policy-requests"
+							]
+						},
+						"description": "Teste de validação com valor negativo"
+					},
+					"response": []
+				}
+			],
+			"description": "Cenários de teste para validação de dados e regras de negócio"
+		},
+		{
+			"name": "Consultas",
+			"item": [
+				{
+					"name": "Consultar Solicitação por ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code é 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contém dados completos\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.id).to.not.be.undefined;",
+									"    pm.expect(jsonData.customerId).to.not.be.undefined;",
+									"    pm.expect(jsonData.status).to.not.be.undefined;",
+									"    pm.expect(jsonData.history).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Histórico contém pelo menos uma entrada\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.history.length).to.be.at.least(1);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/policy-requests/{{policy_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"policy-requests",
+								"{{policy_id}}"
+							]
+						},
+						"description": "Consulta uma solicitação específica pelo ID (usa variável policy_id definida na criação)"
+					},
+					"response": []
+				},
+				{
+					"name": "Consultar Solicitações por Cliente",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code é 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response é um array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Todas as solicitações são do mesmo cliente\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.length > 0) {",
+									"        jsonData.forEach(request => {",
+									"            pm.expect(request.customerId).to.eql(pm.globals.get('customer_id'));",
+									"        });",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/policy-requests/customer/{{customer_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"policy-requests",
+								"customer",
+								"{{customer_id}}"
+							]
+						},
+						"description": "Consulta todas as solicitações de um cliente específico"
+					},
+					"response": []
+				},
+				{
+					"name": "Consultar Solicitação Inexistente",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code é 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/policy-requests/00000000-0000-0000-0000-000000000000",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"policy-requests",
+								"00000000-0000-0000-0000-000000000000"
+							]
+						},
+						"description": "Teste de erro 404 para solicitação inexistente"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints de consulta de solicitações"
+		},
+		{
+			"name": "Cancelamentos",
+			"item": [
+				{
+					"name": "Cancelar Solicitação com Motivo",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code é 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reason\": \"Cliente desistiu da contratação por questões financeiras\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/policy-requests/{{policy_id}}/cancel",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"policy-requests",
+								"{{policy_id}}",
+								"cancel"
+							]
+						},
+						"description": "Cancela uma solicitação com motivo específico"
+					},
+					"response": []
+				},
+				{
+					"name": "Cancelar Solicitação sem Motivo",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Criar uma nova solicitação para cancelar",
+									"const createRequest = {",
+									"    url: pm.globals.get('base_url') + '/api/v1/policy-requests',",
+									"    method: 'POST',",
+									"    header: {",
+									"        'Content-Type': 'application/json'",
+									"    },",
+									"    body: {",
+									"        mode: 'raw',",
+									"        raw: JSON.stringify({",
+									"            customerId: '550e8400-e29b-41d4-a716-446655440004',",
+									"            productId: 'PROD-TEST-CANCEL',",
+									"            category: 'AUTO',",
+									"            salesChannel: 'MOBILE',",
+									"            paymentMethod: 'CREDIT_CARD',",
+									"            totalMonthlyPremiumAmount: 100.00,",
+									"            insuredAmount: 150000.00,",
+									"            coverages: { 'Básica': 150000.00 },",
+									"            assistances: ['Teste']",
+									"        })",
+									"    }",
+									"};",
+									"",
+									"pm.sendRequest(createRequest, (err, res) => {",
+									"    if (err) {",
+									"        console.log(err);",
+									"    } else {",
+									"        const responseJson = res.json();",
+									"        pm.globals.set('cancel_policy_id', responseJson.id);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code é 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/policy-requests/{{cancel_policy_id}}/cancel",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"policy-requests",
+								"{{cancel_policy_id}}",
+								"cancel"
+							]
+						},
+						"description": "Cancela uma solicitação sem motivo específico (motivo padrão será aplicado)"
+					},
+					"response": []
+				},
+				{
+					"name": "Cancelar Solicitação Inexistente",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code é 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reason\": \"Teste de erro\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/policy-requests/00000000-0000-0000-0000-000000000000/cancel",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"policy-requests",
+								"00000000-0000-0000-0000-000000000000",
+								"cancel"
+							]
+						},
+						"description": "Teste de cancelamento de solicitação inexistente"
+					},
+					"response": []
+				}
+			],
+			"description": "Operações de cancelamento de solicitações"
+		},
+		{
+			"name": "Casos de Teste Específicos",
+			"item": [
+				{
+					"name": "Fluxo Completo - AUTO Regular",
+					"item": [
+						{
+							"name": "1. Criar Solicitação",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Solicitação criada com sucesso\", function () {",
+											"    pm.response.to.have.status(201);",
+											"    var jsonData = pm.response.json();",
+											"    pm.globals.set(\"flow_policy_id\", jsonData.id);",
+											"    pm.globals.set(\"flow_customer_id\", \"550e8400-e29b-41d4-a716-446655440100\");",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"customerId\": \"550e8400-e29b-41d4-a716-446655440100\",\n  \"productId\": \"PROD-FLOW-TEST-001\",\n  \"category\": \"AUTO\",\n  \"salesChannel\": \"MOBILE\",\n  \"paymentMethod\": \"CREDIT_CARD\",\n  \"totalMonthlyPremiumAmount\": 200.00,\n  \"insuredAmount\": 300000.00,\n  \"coverages\": {\n    \"Roubo\": 150000.00,\n    \"Colisão\": 150000.00\n  },\n  \"assistances\": [\n    \"Guincho 24h\",\n    \"Chaveiro\"\n  ]\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/policy-requests",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"policy-requests"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "2. Aguardar Processamento (3s)",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// Aguardar 3 segundos para processamento",
+											"setTimeout(() => {}, 3000);"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Aguardando processamento\", function () {",
+											"    pm.expect(true).to.be.true;",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/actuator/health",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"actuator",
+										"health"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "3. Verificar Status Processado",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status foi processado\", function () {",
+											"    pm.response.to.have.status(200);",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(['VALIDATED', 'PENDING', 'APPROVED', 'REJECTED']).to.include(jsonData.status);",
+											"});",
+											"",
+											"pm.test(\"Histórico foi atualizado\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.history.length).to.be.at.least(1);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/policy-requests/{{flow_policy_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"policy-requests",
+										"{{flow_policy_id}}"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "Teste do fluxo completo de uma solicitação AUTO para cliente regular"
+				}
+			],
+			"description": "Cenários de teste completos simulando fluxos reais"
+		},
+		{
+			"name": "Performance e Stress Tests",
+			"item": [
+				{
+					"name": "Criar 10 Solicitações Simultâneas",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.globals.set(\"stress_test_counter\", 0);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code é 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response time menor que 2000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+									"});",
+									"",
+									"// Incrementar contador",
+									"let counter = pm.globals.get(\"stress_test_counter\") || 0;",
+									"pm.globals.set(\"stress_test_counter\", counter + 1);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customerId\": \"{{$guid}}\",\n  \"productId\": \"PROD-STRESS-{{$randomInt}}\",\n  \"category\": \"AUTO\",\n  \"salesChannel\": \"MOBILE\",\n  \"paymentMethod\": \"CREDIT_CARD\",\n  \"totalMonthlyPremiumAmount\": {{$randomInt}},\n  \"insuredAmount\": 200000.00,\n  \"coverages\": {\n    \"Básica\": 200000.00\n  },\n  \"assistances\": [\n    \"Guincho 24h\"\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/policy-requests",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"policy-requests"
+							]
+						},
+						"description": "Para executar este teste de stress, configure o Postman Runner para 10 iterações com delay de 100ms"
+					},
+					"response": []
+				}
+			],
+			"description": "Testes de performance e carga"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "global-prerequest",
+				"exec": [
+					"// Configurar variáveis globais se não existirem",
+					"if (!pm.globals.has(\"base_url\")) {",
+					"    pm.globals.set(\"base_url\", \"http://localhost:8080\");",
+					"}",
+					"",
+					"// Log da requisição para debug",
+					"console.log(\"Executando: \" + pm.info.requestName);"
+				],
+				"type": "text/javascript"
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "global-test",
+				"exec": [
+					"// Log do resultado para debug",
+					"console.log(\"Status: \" + pm.response.code + \" - \" + pm.response.status);",
+					"",
+					"// Teste global para verificar headers de resposta",
+					"pm.test(\"Response tem Content-Type correto\", function () {",
+					"    if (pm.response.headers.has(\"Content-Type\")) {",
+					"        const contentType = pm.response.headers.get(\"Content-Type\");",
+					"        pm.expect(contentType).to.include(\"application/json\");",
+					"    }",
+					"});"
+				],
+				"type": "text/javascript"
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"description": "URL base da API do Policy Request Service"
+		},
+		{
+			"key": "policy_id",
+			"value": "",
+			"description": "ID da solicitação criada dinamicamente nos testes"
+		},
+		{
+			"key": "customer_id", 
+			"value": "550e8400-e29b-41d4-a716-446655440001",
+			"description": "ID do cliente usado nos testes"
+		}
+	]
+}

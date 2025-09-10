@@ -1,0 +1,32 @@
+# Configuração específica para ambiente Docker
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/policy_request_db
+    username: ${DB_USERNAME:policy_user}
+    password: ${DB_PASSWORD:policy_password}
+
+  kafka:
+    bootstrap-servers: kafka:9092
+
+# Configuração de logging para container
+logging:
+  level:
+    com.acme.policyapi: ${LOG_LEVEL:INFO}
+    org.springframework.kafka: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{correlationId}] %logger{36} - %msg%n"
+
+# Configurações específicas para Docker
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,loggers
+  endpoint:
+    health:
+      show-details: always
+  info:
+    env:
+      enabled: true
+    build:
+      enabled: true

@@ -1,0 +1,19 @@
+# Configuração do Prometheus para monitoramento da Policy Service API
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Monitoramento do próprio Prometheus
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Monitoramento da Policy Service API
+  - job_name: 'policy-service-api'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['policy-service-api:8080']
+    scrape_interval: 30s
+    scrape_timeout: 10s

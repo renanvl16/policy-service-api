@@ -1,0 +1,72 @@
+# .dockerignore - arquivos e diretórios a serem ignorados no build da imagem Docker
+
+# Arquivos de documentação
+*.md
+*.txt
+LICENSE
+CHANGELOG
+
+# Arquivos de configuração local
+.env
+.env.local
+.env.*.local
+
+# Diretórios de build e cache
+target/
+.mvn/
+mvnw
+mvnw.cmd
+
+# Logs
+logs/
+*.log
+
+# Arquivos temporários
+*.tmp
+*.temp
+.tmp/
+
+# Arquivos de sistema operacional
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Testes
+src/test/
+*.test
+
+# Arquivos de configuração de CI/CD
+.github/
+.gitlab-ci.yml
+Jenkinsfile
+
+# Node modules (caso existam)
+node_modules/
+
+# Arquivos de backup
+*.bak
+*.backup
+
+# Coverage reports
+coverage/
+.nyc_output/

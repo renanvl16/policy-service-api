@@ -1,0 +1,1244 @@
+{
+  "info": {
+    "name": "Policy Service API - Complete Collection",
+    "description": "Collection completa para testar a API de Solicitações de Apólices de Seguro\n\n**Funcionalidades:**\n- Criar solicitações de apólice\n- Consultar solicitações por ID\n- Consultar solicitações por cliente\n- Cancelar solicitações\n\n**Categorias de Seguro:**\n- AUTO (Automotivo)\n- VIDA (Vida)\n- RESIDENCIAL (Residencial)\n- EMPRESARIAL (Empresarial)\n\n**Canais de Venda:**\n- WEBSITE, MOBILE, WHATSAPP, PRESENCIAL, TELEFONE\n\n**Métodos de Pagamento:**\n- CREDIT_CARD, DEBIT_ACCOUNT, BOLETO, PIX",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "policy-api-v1"
+  },
+  "item": [
+    {
+      "name": "1. Criar Solicitações",
+      "item": [
+        {
+          "name": "Criar Solicitação - Seguro Auto Completo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code é 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response possui ID e createdAt\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('createdAt');",
+                  "    pm.expect(jsonData).to.have.property('status');",
+                  "    pm.expect(jsonData.status).to.eql('RECEIVED');",
+                  "});",
+                  "",
+                  "// Salva o ID para uso posterior",
+                  "if (pm.response.code === 201) {",
+                  "    var response = pm.response.json();",
+                  "    pm.collectionVariables.set(\"autoRequestId\", response.id);",
+                  "    pm.collectionVariables.set(\"customerId\", pm.request.json().customerId);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Gera UUID para customer",
+                  "pm.collectionVariables.set(\"testCustomerId\", pm.variables.replaceIn('{{$guid}}'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{testCustomerId}}\",\n  \"productId\": \"AUTO-PREMIUM-2024\",\n  \"category\": \"AUTO\",\n  \"salesChannel\": \"WEBSITE\",\n  \"paymentMethod\": \"CREDIT_CARD\",\n  \"totalMonthlyPremiumAmount\": 250.50,\n  \"insuredAmount\": 80000.00,\n  \"coverages\": {\n    \"COLLISION\": 50000.00,\n    \"COMPREHENSIVE\": 80000.00,\n    \"LIABILITY\": 100000.00,\n    \"PERSONAL_INJURY\": 25000.00,\n    \"GLASS_COVERAGE\": 5000.00\n  },\n  \"assistances\": [\n    \"24h Roadside Assistance\",\n    \"Towing Service\",\n    \"Emergency Repair\",\n    \"Rental Car Coverage\",\n    \"Locksmith Service\",\n    \"Fuel Delivery\",\n    \"Battery Jump Start\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/policy-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "policy-requests"
+              ]
+            },
+            "description": "Cria uma solicitação completa de seguro auto com múltiplas coberturas e assistências"
+          }
+        },
+        {
+          "name": "Criar Solicitação - Seguro Vida",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code é 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    var response = pm.response.json();",
+                  "    pm.collectionVariables.set(\"vidaRequestId\", response.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{$guid}}\",\n  \"productId\": \"VIDA-FAMILIAR-2024\",\n  \"category\": \"VIDA\",\n  \"salesChannel\": \"TELEFONE\",\n  \"paymentMethod\": \"BOLETO\",\n  \"totalMonthlyPremiumAmount\": 89.90,\n  \"insuredAmount\": 500000.00,\n  \"coverages\": {\n    \"DEATH_BENEFIT\": 500000.00,\n    \"DISABILITY_BENEFIT\": 200000.00,\n    \"CRITICAL_ILLNESS\": 100000.00\n  },\n  \"assistances\": [\n    \"Medical Assistance\",\n    \"Legal Assistance\",\n    \"Psychological Support\",\n    \"Home Care Service\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/policy-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "policy-requests"
+              ]
+            },
+            "description": "Cria uma solicitação de seguro de vida com benefícios e assistências específicas"
+          }
+        },
+        {
+          "name": "Criar Solicitação - Seguro Residencial",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code é 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    var response = pm.response.json();",
+                  "    pm.collectionVariables.set(\"residencialRequestId\", response.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{$guid}}\",\n  \"productId\": \"RESIDENCIAL-PREMIUM\",\n  \"category\": \"RESIDENCIAL\",\n  \"salesChannel\": \"PRESENCIAL\",\n  \"paymentMethod\": \"PIX\",\n  \"totalMonthlyPremiumAmount\": 145.75,\n  \"insuredAmount\": 350000.00,\n  \"coverages\": {\n    \"FIRE_COVERAGE\": 350000.00,\n    \"THEFT_COVERAGE\": 50000.00,\n    \"WATER_DAMAGE\": 25000.00,\n    \"ELECTRICAL_DAMAGE\": 15000.00,\n    \"CONTENTS_COVERAGE\": 100000.00\n  },\n  \"assistances\": [\n    \"Emergency Locksmith\",\n    \"Plumbing Service\",\n    \"Electrical Service\",\n    \"Glass Repair\",\n    \"Cleaning Service\",\n    \"Temporary Accommodation\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/policy-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "policy-requests"
+              ]
+            },
+            "description": "Cria uma solicitação de seguro residencial com diversas coberturas domiciliares"
+          }
+        },
+        {
+          "name": "Criar Solicitação - Seguro Empresarial",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code é 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    var response = pm.response.json();",
+                  "    pm.collectionVariables.set(\"empresarialRequestId\", response.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{$guid}}\",\n  \"productId\": \"EMPRESARIAL-MULTI\",\n  \"category\": \"EMPRESARIAL\",\n  \"salesChannel\": \"WHATSAPP\",\n  \"paymentMethod\": \"DEBIT_ACCOUNT\",\n  \"totalMonthlyPremiumAmount\": 890.00,\n  \"insuredAmount\": 2000000.00,\n  \"coverages\": {\n    \"PROPERTY_COVERAGE\": 1500000.00,\n    \"EQUIPMENT_COVERAGE\": 500000.00,\n    \"LIABILITY_COVERAGE\": 1000000.00,\n    \"BUSINESS_INTERRUPTION\": 300000.00,\n    \"CYBER_COVERAGE\": 100000.00\n  },\n  \"assistances\": [\n    \"Legal Assistance\",\n    \"Accounting Support\",\n    \"IT Support\",\n    \"Emergency Repair\",\n    \"Security Service\",\n    \"Risk Assessment\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/policy-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "policy-requests"
+              ]
+            },
+            "description": "Cria uma solicitação de seguro empresarial com coberturas comerciais abrangentes"
+          }
+        },
+        {
+          "name": "Criar Solicitação - Mínima (Teste de Validação)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code é 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    var response = pm.response.json();",
+                  "    pm.collectionVariables.set(\"minimaRequestId\", response.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{$guid}}\",\n  \"productId\": \"BASIC-PLAN\",\n  \"category\": \"AUTO\",\n  \"salesChannel\": \"MOBILE\",\n  \"paymentMethod\": \"PIX\",\n  \"totalMonthlyPremiumAmount\": 50.00,\n  \"insuredAmount\": 20000.00,\n  \"coverages\": {\n    \"BASIC_COVERAGE\": 20000.00\n  },\n  \"assistances\": [\n    \"Basic Assistance\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/policy-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "policy-requests"
+              ]
+            },
+            "description": "Cria uma solicitação com os campos mínimos obrigatórios para testar validações"
+          }
+        }
+      ],
+      "description": "Coleção de requests para criar diferentes tipos de solicitações de apólice"
+    },
+    {
+      "name": "2. Consultar Solicitações",
+      "item": [
+        {
+          "name": "Consultar por ID - Auto (Criado anteriormente)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code é 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contém dados completos\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('customerId');",
+                  "    pm.expect(jsonData).to.have.property('productId');",
+                  "    pm.expect(jsonData).to.have.property('category');",
+                  "    pm.expect(jsonData).to.have.property('status');",
+                  "    pm.expect(jsonData).to.have.property('coverages');",
+                  "    pm.expect(jsonData).to.have.property('assistances');",
+                  "    pm.expect(jsonData).to.have.property('history');",
+                  "});",
+                  "",
+                  "pm.test(\"Categoria é AUTO\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.category).to.eql('AUTO');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/policy-requests/{{autoRequestId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "policy-requests",
+                "{{autoRequestId}}"
+              ]
+            },
+            "description": "Consulta a solicitação de seguro auto criada anteriormente"
+          }
+        },
+        {
+          "name": "Consultar por Cliente - Todas as solicitações",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code é 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response é um array\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test(\"Cada item tem propriedades necessárias\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.length > 0) {",
+                  "        pm.expect(jsonData[0]).to.have.property('id');",
+                  "        pm.expect(jsonData[0]).to.have.property('customerId');",
+                  "        pm.expect(jsonData[0]).to.have.property('status');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/policy-requests/customer/{{customerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "policy-requests",
+                "customer",
+                "{{customerId}}"
+              ]
+            },
+            "description": "Consulta todas as solicitações do cliente teste"
+          }
+        },
+        {
+          "name": "Consultar por ID Inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code é 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/policy-requests/12345678-1234-1234-1234-123456789012",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "policy-requests",
+                "12345678-1234-1234-1234-123456789012"
+              ]
+            },
+            "description": "Testa o comportamento com um ID que não existe"
+          }
+        },
+        {
+          "name": "Consultar por Cliente Inexistente (Lista Vazia)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code é 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response é array vazio\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "    pm.expect(jsonData).to.have.length(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/policy-requests/customer/99999999-9999-9999-9999-999999999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "policy-requests",
+                "customer",
+                "99999999-9999-9999-9999-999999999999"
+              ]
+            },
+            "description": "Testa consulta por cliente que não possui solicitações"
+          }
+        }
+      ],
+      "description": "Coleção de requests para consultar solicitações existentes"
+    },
+    {
+      "name": "3. Cancelar Solicitações",
+      "item": [
+        {
+          "name": "Cancelar com Motivo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code é 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Cliente solicitou cancelamento por mudança de veículo\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/policy-requests/{{vidaRequestId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "policy-requests",
+                "{{vidaRequestId}}",
+                "cancel"
+              ]
+            },
+            "description": "Cancela uma solicitação com motivo específico"
+          }
+        },
+        {
+          "name": "Cancelar sem Motivo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code é 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/policy-requests/{{residencialRequestId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "policy-requests",
+                "{{residencialRequestId}}",
+                "cancel"
+              ]
+            },
+            "description": "Cancela uma solicitação sem especificar motivo"
+          }
+        },
+        {
+          "name": "Tentar Cancelar Inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code é 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Teste de ID inexistente\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/policy-requests/00000000-0000-0000-0000-000000000000/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "policy-requests",
+                "00000000-0000-0000-0000-000000000000",
+                "cancel"
+              ]
+            },
+            "description": "Testa cancelamento de solicitação que não existe"
+          }
+        }
+      ],
+      "description": "Coleção de requests para cancelar solicitações"
+    },
+    {
+      "name": "4. Testes de Validação",
+      "item": [
+        {
+          "name": "Criar com Dados Inválidos - Customer ID Nulo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code é 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Mensagem de validação presente\", function () {",
+                  "    var responseText = pm.response.text();",
+                  "    pm.expect(responseText).to.include('cliente');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": null,\n  \"productId\": \"TEST-PRODUCT\",\n  \"category\": \"AUTO\",\n  \"salesChannel\": \"WEBSITE\",\n  \"paymentMethod\": \"CREDIT_CARD\",\n  \"totalMonthlyPremiumAmount\": 100.00,\n  \"insuredAmount\": 50000.00,\n  \"coverages\": {\n    \"BASIC\": 50000.00\n  },\n  \"assistances\": [\n    \"Basic Service\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/policy-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "policy-requests"
+              ]
+            },
+            "description": "Testa validação de customer ID obrigatório"
+          }
+        },
+        {
+          "name": "Criar com Valores Negativos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code é 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Mensagem de validação sobre valor\", function () {",
+                  "    var responseText = pm.response.text();",
+                  "    pm.expect(responseText.toLowerCase()).to.include('maior');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{$guid}}\",\n  \"productId\": \"TEST-PRODUCT\",\n  \"category\": \"AUTO\",\n  \"salesChannel\": \"WEBSITE\",\n  \"paymentMethod\": \"CREDIT_CARD\",\n  \"totalMonthlyPremiumAmount\": -100.00,\n  \"insuredAmount\": -50000.00,\n  \"coverages\": {\n    \"BASIC\": 50000.00\n  },\n  \"assistances\": [\n    \"Basic Service\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/policy-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "policy-requests"
+              ]
+            },
+            "description": "Testa validação de valores monetários positivos"
+          }
+        },
+        {
+          "name": "Criar com Coberturas Vazias",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code é 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Mensagem sobre coberturas\", function () {",
+                  "    var responseText = pm.response.text();",
+                  "    pm.expect(responseText.toLowerCase()).to.include('cobertura');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{$guid}}\",\n  \"productId\": \"TEST-PRODUCT\",\n  \"category\": \"AUTO\",\n  \"salesChannel\": \"WEBSITE\",\n  \"paymentMethod\": \"CREDIT_CARD\",\n  \"totalMonthlyPremiumAmount\": 100.00,\n  \"insuredAmount\": 50000.00,\n  \"coverages\": {},\n  \"assistances\": [\n    \"Basic Service\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/policy-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "policy-requests"
+              ]
+            },
+            "description": "Testa validação de coberturas obrigatórias"
+          }
+        },
+        {
+          "name": "Criar com Categoria Inválida",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code é 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{$guid}}\",\n  \"productId\": \"TEST-PRODUCT\",\n  \"category\": \"CATEGORIA_INEXISTENTE\",\n  \"salesChannel\": \"WEBSITE\",\n  \"paymentMethod\": \"CREDIT_CARD\",\n  \"totalMonthlyPremiumAmount\": 100.00,\n  \"insuredAmount\": 50000.00,\n  \"coverages\": {\n    \"BASIC\": 50000.00\n  },\n  \"assistances\": [\n    \"Basic Service\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/policy-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "policy-requests"
+              ]
+            },
+            "description": "Testa validação de categoria de seguro válida"
+          }
+        }
+      ],
+      "description": "Coleção de requests para testar validações de entrada"
+    },
+    {
+      "name": "5. Cenários de Edge Case",
+      "item": [
+        {
+          "name": "Criar com Valores Muito Altos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code é 201 ou 400\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([201, 400]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{$guid}}\",\n  \"productId\": \"PREMIUM-ULTRA-HIGH\",\n  \"category\": \"EMPRESARIAL\",\n  \"salesChannel\": \"PRESENCIAL\",\n  \"paymentMethod\": \"CREDIT_CARD\",\n  \"totalMonthlyPremiumAmount\": 99999.99,\n  \"insuredAmount\": 10000000.00,\n  \"coverages\": {\n    \"ULTRA_PREMIUM\": 10000000.00,\n    \"MAXIMUM_LIABILITY\": 5000000.00\n  },\n  \"assistances\": [\n    \"24/7 Premium Support\",\n    \"Executive Services\",\n    \"VIP Treatment\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/policy-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "policy-requests"
+              ]
+            },
+            "description": "Testa comportamento com valores monetários muito altos"
+          }
+        },
+        {
+          "name": "Criar com Muitas Coberturas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code é 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    var response = pm.response.json();",
+                  "    pm.collectionVariables.set(\"muitasCoberturasId\", response.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{$guid}}\",\n  \"productId\": \"COMPREHENSIVE-ALL-INCLUSIVE\",\n  \"category\": \"AUTO\",\n  \"salesChannel\": \"WEBSITE\",\n  \"paymentMethod\": \"CREDIT_CARD\",\n  \"totalMonthlyPremiumAmount\": 450.75,\n  \"insuredAmount\": 120000.00,\n  \"coverages\": {\n    \"COLLISION\": 80000.00,\n    \"COMPREHENSIVE\": 120000.00,\n    \"LIABILITY\": 200000.00,\n    \"PERSONAL_INJURY\": 50000.00,\n    \"GLASS_COVERAGE\": 10000.00,\n    \"TIRE_COVERAGE\": 5000.00,\n    \"RENTAL_CAR\": 15000.00,\n    \"EMERGENCY_ROAD_SERVICE\": 3000.00,\n    \"TOTAL_LOSS_COVERAGE\": 120000.00,\n    \"ACCESSORIES_COVERAGE\": 20000.00,\n    \"ENVIRONMENTAL_DAMAGE\": 25000.00,\n    \"VANDALISM_COVERAGE\": 30000.00,\n    \"THEFT_COVERAGE\": 120000.00,\n    \"FIRE_COVERAGE\": 120000.00,\n    \"NATURAL_DISASTER\": 80000.00\n  },\n  \"assistances\": [\n    \"24h Roadside Assistance\",\n    \"Towing Service\",\n    \"Emergency Repair\",\n    \"Rental Car Coverage\",\n    \"Locksmith Service\",\n    \"Fuel Delivery\",\n    \"Battery Jump Start\",\n    \"Flat Tire Service\",\n    \"Winch Service\",\n    \"Emergency Transportation\",\n    \"Hotel Coverage\",\n    \"Meal Coverage\",\n    \"Pet Care Service\",\n    \"Legal Assistance\",\n    \"Accident Documentation\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/policy-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "policy-requests"
+              ]
+            },
+            "description": "Testa solicitação com número máximo de coberturas e assistências"
+          }
+        },
+        {
+          "name": "Testar Todos os Canais de Venda",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code é 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Canal de venda é MOBILE\", function () {",
+                  "    // Este teste é executado para o último request",
+                  "    // Os outros canais são testados nas outras solicitações",
+                  "    pm.expect(pm.request.json().salesChannel).to.eql('MOBILE');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{$guid}}\",\n  \"productId\": \"MOBILE-EXCLUSIVE\",\n  \"category\": \"VIDA\",\n  \"salesChannel\": \"MOBILE\",\n  \"paymentMethod\": \"PIX\",\n  \"totalMonthlyPremiumAmount\": 75.50,\n  \"insuredAmount\": 200000.00,\n  \"coverages\": {\n    \"MOBILE_SPECIAL\": 200000.00\n  },\n  \"assistances\": [\n    \"Mobile App Support\",\n    \"Digital Assistance\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/policy-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "policy-requests"
+              ]
+            },
+            "description": "Testa o canal de vendas MOBILE (outros canais testados em outras requests)"
+          }
+        }
+      ],
+      "description": "Coleção de testes para casos extremos e limites do sistema"
+    },
+    {
+      "name": "6. Workflow Completo",
+      "item": [
+        {
+          "name": "1. Criar Nova Solicitação",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Solicitação criada com sucesso\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    var response = pm.response.json();",
+                  "    pm.collectionVariables.set(\"workflowRequestId\", response.id);",
+                  "    pm.collectionVariables.set(\"workflowCustomerId\", pm.request.json().customerId);",
+                  "    ",
+                  "    pm.test(\"Status inicial é RECEIVED\", function () {",
+                  "        pm.expect(response.status).to.eql('RECEIVED');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.collectionVariables.set(\"workflowCustomerGuid\", pm.variables.replaceIn('{{$guid}}'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{workflowCustomerGuid}}\",\n  \"productId\": \"WORKFLOW-TEST-PRODUCT\",\n  \"category\": \"AUTO\",\n  \"salesChannel\": \"WEBSITE\",\n  \"paymentMethod\": \"CREDIT_CARD\",\n  \"totalMonthlyPremiumAmount\": 180.00,\n  \"insuredAmount\": 75000.00,\n  \"coverages\": {\n    \"COLLISION\": 50000.00,\n    \"COMPREHENSIVE\": 75000.00,\n    \"LIABILITY\": 100000.00\n  },\n  \"assistances\": [\n    \"24h Roadside Assistance\",\n    \"Towing Service\",\n    \"Emergency Repair\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/policy-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "policy-requests"
+              ]
+            },
+            "description": "Passo 1: Criar uma nova solicitação para o workflow completo"
+          }
+        },
+        {
+          "name": "2. Consultar Solicitação Criada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Consulta bem-sucedida\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Dados da solicitação estão corretos\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.id).to.eql(pm.collectionVariables.get('workflowRequestId'));",
+                  "    pm.expect(jsonData.category).to.eql('AUTO');",
+                  "    pm.expect(jsonData.productId).to.eql('WORKFLOW-TEST-PRODUCT');",
+                  "});",
+                  "",
+                  "pm.test(\"Histórico contém entrada inicial\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.history).to.be.an('array');",
+                  "    pm.expect(jsonData.history.length).to.be.at.least(1);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/policy-requests/{{workflowRequestId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "policy-requests",
+                "{{workflowRequestId}}"
+              ]
+            },
+            "description": "Passo 2: Verificar se a solicitação foi criada corretamente"
+          }
+        },
+        {
+          "name": "3. Consultar Solicitações do Cliente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Lista de solicitações obtida\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Cliente possui pelo menos uma solicitação\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "    pm.expect(jsonData.length).to.be.at.least(1);",
+                  "});",
+                  "",
+                  "pm.test(\"Solicitação criada está na lista\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var workflowRequestId = pm.collectionVariables.get('workflowRequestId');",
+                  "    var found = jsonData.find(request => request.id === workflowRequestId);",
+                  "    pm.expect(found).to.not.be.undefined;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/policy-requests/customer/{{workflowCustomerGuid}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "policy-requests",
+                "customer",
+                "{{workflowCustomerGuid}}"
+              ]
+            },
+            "description": "Passo 3: Verificar se a solicitação aparece na lista do cliente"
+          }
+        },
+        {
+          "name": "4. Cancelar Solicitação",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Cancelamento realizado com sucesso\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Workflow de teste concluído - cancelamento intencional\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/policy-requests/{{workflowRequestId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "policy-requests",
+                "{{workflowRequestId}}",
+                "cancel"
+              ]
+            },
+            "description": "Passo 4: Cancelar a solicitação criada"
+          }
+        },
+        {
+          "name": "5. Verificar Status após Cancelamento",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Consulta após cancelamento bem-sucedida\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Status foi alterado para CANCELLED\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql('CANCELLED');",
+                  "});",
+                  "",
+                  "pm.test(\"Histórico foi atualizado com cancelamento\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.history).to.be.an('array');",
+                  "    pm.expect(jsonData.history.length).to.be.at.least(2);",
+                  "    ",
+                  "    // Verifica se existe entrada de cancelamento no histórico",
+                  "    var cancelEntry = jsonData.history.find(entry => entry.status === 'CANCELLED');",
+                  "    pm.expect(cancelEntry).to.not.be.undefined;",
+                  "    pm.expect(cancelEntry.reason).to.include('Workflow de teste');",
+                  "});",
+                  "",
+                  "pm.test(\"Timestamp de finalização foi definido\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.finishedAt).to.not.be.null;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/policy-requests/{{workflowRequestId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "policy-requests",
+                "{{workflowRequestId}}"
+              ]
+            },
+            "description": "Passo 5: Verificar se o status foi alterado corretamente após cancelamento"
+          }
+        }
+      ],
+      "description": "Workflow completo testando todo o ciclo de vida de uma solicitação"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "exec": [
+          "// Script global executado antes de cada request",
+          "console.log('Executando request:', pm.request.name);"
+        ],
+        "type": "text/javascript"
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "exec": [
+          "// Script global executado após cada request",
+          "console.log('Response status:', pm.response.status);",
+          "console.log('Response time:', pm.response.responseTime + 'ms');",
+          "",
+          "// Log de erros para debug",
+          "if (pm.response.code >= 400) {",
+          "    console.log('Error response:', pm.response.text());",
+          "}"
+        ],
+        "type": "text/javascript"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "description": "URL base da API - ajuste conforme necessário"
+    },
+    {
+      "key": "autoRequestId",
+      "value": "",
+      "description": "ID da solicitação de seguro auto criada"
+    },
+    {
+      "key": "vidaRequestId",
+      "value": "",
+      "description": "ID da solicitação de seguro vida criada"
+    },
+    {
+      "key": "residencialRequestId",
+      "value": "",
+      "description": "ID da solicitação de seguro residencial criada"
+    },
+    {
+      "key": "empresarialRequestId",
+      "value": "",
+      "description": "ID da solicitação de seguro empresarial criada"
+    },
+    {
+      "key": "minimaRequestId",
+      "value": "",
+      "description": "ID da solicitação mínima criada"
+    },
+    {
+      "key": "customerId",
+      "value": "",
+      "description": "ID do cliente teste"
+    },
+    {
+      "key": "testCustomerId",
+      "value": "",
+      "description": "ID do cliente para testes"
+    },
+    {
+      "key": "muitasCoberturasId",
+      "value": "",
+      "description": "ID da solicitação com muitas coberturas"
+    },
+    {
+      "key": "workflowRequestId",
+      "value": "",
+      "description": "ID da solicitação do workflow completo"
+    },
+    {
+      "key": "workflowCustomerId",
+      "value": "",
+      "description": "ID do cliente do workflow completo"
+    },
+    {
+      "key": "workflowCustomerGuid",
+      "value": "",
+      "description": "GUID do cliente do workflow"
+    }
+  ]
+}
